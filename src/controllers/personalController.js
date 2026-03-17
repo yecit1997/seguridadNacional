@@ -1,46 +1,41 @@
-const PersonalAdministrativo = require('../models/PersonalAdministrativo');
-const UsuarioRol = require('../models/UsuarioRol');
-const { apiResponse, AppError } = require('../middleware/response');
+import { personalService } from '../services/SpecializedServices.js';
+import { apiResponse } from '../middleware/response.js';
 
-const include = [{ model: UsuarioRol, as: 'usuarioRol' }];
+/**
+ * Controlador de Personal Administrativo
+ */
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await PersonalAdministrativo.findAll({ include }))); }
-  catch (e) { next(e); }
-};
-
-exports.buscarPorId = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const p = await PersonalAdministrativo.findByPk(req.params.id, { include });
-    if (!p) throw new AppError('Personal no encontrado', 404);
-    res.json(apiResponse.ok(p));
+    const data = await personalService.listarConDetalles();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const { usuario_rol_id_usuario_rol, cargo } = req.body;
-    const ur = await UsuarioRol.findByPk(usuario_rol_id_usuario_rol);
-    if (!ur) throw new AppError('UsuarioRol no encontrado', 404);
-    const p = await PersonalAdministrativo.create({ usuario_rol_id_usuario_rol, cargo });
-    res.status(201).json(apiResponse.created(p));
+    const data = await personalService.findById(req.params.id, { include: ['usuario'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const p = await PersonalAdministrativo.findByPk(req.params.id);
-    if (!p) throw new AppError('Personal no encontrado', 404);
-    await p.update({ cargo: req.body.cargo });
-    res.json(apiResponse.ok(p, 'Actualizado'));
+    const data = await personalService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const p = await PersonalAdministrativo.findByPk(req.params.id);
-    if (!p) throw new AppError('Personal no encontrado', 404);
-    await p.destroy();
-    res.json(apiResponse.noContent('Personal eliminado'));
+    const data = await personalService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Personal administrativo actualizado exitosamente'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await personalService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Personal administrativo eliminado correctamente'));
   } catch (e) { next(e); }
 };

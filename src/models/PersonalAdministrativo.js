@@ -1,12 +1,28 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const UsuarioRol = require('./UsuarioRol');
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
+import Usuario from './Usuario.js';
 
+/**
+ * Modelo PersonalAdministrativo
+ * Usuarios encargados de labores administrativas.
+ */
 const PersonalAdministrativo = sequelize.define('PersonalAdministrativo', {
-  usuario_rol_id_usuario_rol: { type: DataTypes.INTEGER, primaryKey: true },
-  cargo:                      { type: DataTypes.STRING(50) },
-}, { tableName: 'personal_administrativo' });
+  usuario_id_usuario: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    references: { model: Usuario, key: 'id_usuario' },
+  },
+  cargo: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+}, {
+  tableName: 'personal_administrativo',
+  timestamps: false,
+});
 
-PersonalAdministrativo.belongsTo(UsuarioRol, { foreignKey: 'usuario_rol_id_usuario_rol', as: 'usuarioRol' });
+// Relación de especialización
+PersonalAdministrativo.belongsTo(Usuario, { foreignKey: 'usuario_id_usuario', as: 'usuario' });
+Usuario.hasOne(PersonalAdministrativo, { foreignKey: 'usuario_id_usuario', as: 'personal' });
 
-module.exports = PersonalAdministrativo;
+export default PersonalAdministrativo;

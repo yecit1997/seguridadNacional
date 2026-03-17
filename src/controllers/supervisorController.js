@@ -1,46 +1,41 @@
-const Supervisor = require('../models/Supervisor');
-const UsuarioRol = require('../models/UsuarioRol');
-const { apiResponse, AppError } = require('../middleware/response');
+import { supervisorService } from '../services/SpecializedServices.js';
+import { apiResponse } from '../middleware/response.js';
 
-const include = [{ model: UsuarioRol, as: 'usuarioRol' }];
+/**
+ * Controlador de Supervisores
+ */
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await Supervisor.findAll({ include }))); }
-  catch (e) { next(e); }
-};
-
-exports.buscarPorId = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const s = await Supervisor.findByPk(req.params.id, { include });
-    if (!s) throw new AppError('Supervisor no encontrado', 404);
-    res.json(apiResponse.ok(s));
+    const data = await supervisorService.listarConDetalles();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const { usuario_rol_id_usuario_rol, fecha_ascenso } = req.body;
-    const ur = await UsuarioRol.findByPk(usuario_rol_id_usuario_rol);
-    if (!ur) throw new AppError('UsuarioRol no encontrado', 404);
-    const s = await Supervisor.create({ usuario_rol_id_usuario_rol, fecha_ascenso });
-    res.status(201).json(apiResponse.created(s));
+    const data = await supervisorService.findById(req.params.id, { include: ['usuario'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const s = await Supervisor.findByPk(req.params.id);
-    if (!s) throw new AppError('Supervisor no encontrado', 404);
-    await s.update({ fecha_ascenso: req.body.fecha_ascenso });
-    res.json(apiResponse.ok(s, 'Actualizado'));
+    const data = await supervisorService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const s = await Supervisor.findByPk(req.params.id);
-    if (!s) throw new AppError('Supervisor no encontrado', 404);
-    await s.destroy();
-    res.json(apiResponse.noContent('Supervisor eliminado'));
+    const data = await supervisorService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Supervisor actualizado exitosamente'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await supervisorService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Supervisor eliminado correctamente'));
   } catch (e) { next(e); }
 };

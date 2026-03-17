@@ -1,53 +1,48 @@
-const Vehiculo = require('../models/Vehiculo');
-const Conductor = require('../models/Conductor');
-const Persona = require('../models/Persona');
-const { apiResponse, AppError } = require('../middleware/response');
+import { vehiculoService } from '../services/SpecializedServices.js';
+import { apiResponse, AppError } from '../middleware/response.js';
 
-const include = [{ model: Conductor, as: 'conductor', include: [{ model: Persona, as: 'persona' }] }];
+/**
+ * Controlador de Vehículos
+ */
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await Vehiculo.findAll({ include }))); }
-  catch (e) { next(e); }
-};
-
-exports.buscarPorId = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const v = await Vehiculo.findByPk(req.params.id, { include });
-    if (!v) throw new AppError('Vehículo no encontrado', 404);
-    res.json(apiResponse.ok(v));
+    const data = await vehiculoService.listarConDetalles();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.buscarPorPlaca = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const v = await Vehiculo.findOne({ where: { placa: req.params.placa }, include });
-    if (!v) throw new AppError('Vehículo no encontrado', 404);
-    res.json(apiResponse.ok(v));
+    const data = await vehiculoService.findById(req.params.id, { include: ['conductor'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorPlaca = async (req, res, next) => {
   try {
-    const { placa, conductor_id_fk_persona } = req.body;
-    const v = await Vehiculo.create({ placa, conductor_id_fk_persona });
-    res.status(201).json(apiResponse.created(v));
+    const data = await vehiculoService.findByPlaca(req.params.placa);
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const v = await Vehiculo.findByPk(req.params.id);
-    if (!v) throw new AppError('Vehículo no encontrado', 404);
-    await v.update(req.body);
-    res.json(apiResponse.ok(v, 'Actualizado'));
+    const data = await vehiculoService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const v = await Vehiculo.findByPk(req.params.id);
-    if (!v) throw new AppError('Vehículo no encontrado', 404);
-    await v.destroy();
-    res.json(apiResponse.noContent('Vehículo eliminado'));
+    const data = await vehiculoService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Actualizado'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await vehiculoService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Vehículo eliminado correctamente'));
   } catch (e) { next(e); }
 };

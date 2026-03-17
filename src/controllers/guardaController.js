@@ -1,60 +1,48 @@
-const Guarda = require('../models/Guarda');
-const Supervisor = require('../models/Supervisor');
-const UsuarioRol = require('../models/UsuarioRol');
-const { apiResponse, AppError } = require('../middleware/response');
+import { guardaService } from '../services/SpecializedServices.js';
+import { apiResponse } from '../middleware/response.js';
 
-const include = [
-  { model: UsuarioRol, as: 'usuarioRol' },
-  { model: Supervisor, as: 'supervisor' },
-];
+/**
+ * Controlador de Guardas
+ */
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await Guarda.findAll({ include }))); }
-  catch (e) { next(e); }
-};
-
-exports.listarPorSupervisor = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const guardas = await Guarda.findAll({
-      where: { supervisor_id_supervisor: req.params.supervisorId },
-      include,
-    });
-    res.json(apiResponse.ok(guardas));
+    const data = await guardaService.listarConDetalles();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.buscarPorId = async (req, res, next) => {
+export const listarPorSupervisor = async (req, res, next) => {
   try {
-    const g = await Guarda.findByPk(req.params.id, { include });
-    if (!g) throw new AppError('Guarda no encontrado', 404);
-    res.json(apiResponse.ok(g));
+    const data = await guardaService.listarPorSupervisor(req.params.supervisorId);
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const { usuario_rol_id_usuario_rol, areaAsignada, supervisor_id_supervisor } = req.body;
-    const ur = await UsuarioRol.findByPk(usuario_rol_id_usuario_rol);
-    if (!ur) throw new AppError('UsuarioRol no encontrado', 404);
-    const g = await Guarda.create({ usuario_rol_id_usuario_rol, areaAsignada, supervisor_id_supervisor });
-    res.status(201).json(apiResponse.created(g));
+    const data = await guardaService.findById(req.params.id, { include: ['usuario', 'supervisor'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const g = await Guarda.findByPk(req.params.id);
-    if (!g) throw new AppError('Guarda no encontrado', 404);
-    await g.update(req.body);
-    res.json(apiResponse.ok(g, 'Actualizado'));
+    const data = await guardaService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const g = await Guarda.findByPk(req.params.id);
-    if (!g) throw new AppError('Guarda no encontrado', 404);
-    await g.destroy();
-    res.json(apiResponse.noContent('Guarda eliminado'));
+    const data = await guardaService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Guarda actualizado exitosamente'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await guardaService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Guarda eliminado correctamente'));
   } catch (e) { next(e); }
 };

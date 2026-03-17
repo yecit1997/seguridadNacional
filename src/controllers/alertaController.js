@@ -1,65 +1,48 @@
-const Alerta = require('../models/Alerta');
-const Usuario = require('../models/Usuario');
-const Reporte = require('../models/Reporte');
-const { apiResponse, AppError } = require('../middleware/response');
+import alertaService from '../services/AlertaService.js';
+import { apiResponse } from '../middleware/response.js';
 
-const include = [
-  { model: Usuario, as: 'usuarioDestinatario' },
-  { model: Reporte, as: 'reporte'             },
-];
+/**
+ * Controlador de Alertas
+ */
 
-exports.listarPorUsuario = async (req, res, next) => {
+export const listarPorUsuario = async (req, res, next) => {
   try {
-    res.json(apiResponse.ok(await Alerta.findAll({
-      where: { usuario_id_usuario_destinatario: req.params.idUsuario }, include,
-    })));
+    const data = await alertaService.listarPorUsuario(req.params.idUsuario);
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.listarNoLeidas = async (req, res, next) => {
+export const listarNoLeidas = async (req, res, next) => {
   try {
-    res.json(apiResponse.ok(await Alerta.findAll({
-      where: { usuario_id_usuario_destinatario: req.params.idUsuario, leida: 0 }, include,
-    })));
+    const data = await alertaService.listarNoLeidas(req.params.idUsuario);
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.buscarPorId = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const a = await Alerta.findByPk(req.params.id, { include });
-    if (!a) throw new AppError('Alerta no encontrada', 404);
-    res.json(apiResponse.ok(a));
+    const data = await alertaService.findById(req.params.id, { include: ['reporte'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const { mensaje, usuario_id_usuario_destinatario, reporte_id_reporte } = req.body;
-    const a = await Alerta.create({
-      fecha_hora: new Date(),
-      mensaje,
-      leida: 0,
-      usuario_id_usuario_destinatario,
-      reporte_id_reporte,
-    });
-    res.status(201).json(apiResponse.created(a));
+    const data = await alertaService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.marcarLeida = async (req, res, next) => {
+export const marcarLeida = async (req, res, next) => {
   try {
-    const a = await Alerta.findByPk(req.params.id);
-    if (!a) throw new AppError('Alerta no encontrada', 404);
-    await a.update({ leida: 1 });
-    res.json(apiResponse.ok(a, 'Alerta marcada como leída'));
+    const data = await alertaService.marcarComoLeida(req.params.id);
+    res.json(apiResponse.ok(data, 'Alerta marcada como leída'));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const eliminar = async (req, res, next) => {
   try {
-    const a = await Alerta.findByPk(req.params.id);
-    if (!a) throw new AppError('Alerta no encontrada', 404);
-    await a.destroy();
-    res.json(apiResponse.noContent('Alerta eliminada'));
+    await alertaService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Alerta eliminada correctamente'));
   } catch (e) { next(e); }
 };

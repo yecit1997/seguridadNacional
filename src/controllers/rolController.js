@@ -1,40 +1,41 @@
-const Rol = require('../models/Rol');
-const { apiResponse, AppError } = require('../middleware/response');
+import { rolService } from '../services/CatalogosService.js';
+import { apiResponse } from '../middleware/response.js';
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await Rol.findAll())); }
-  catch (e) { next(e); }
-};
+/**
+ * Controlador de Roles
+ */
 
-exports.buscarPorId = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const rol = await Rol.findByPk(req.params.id);
-    if (!rol) throw new AppError('Rol no encontrado', 404);
-    res.json(apiResponse.ok(rol));
+    const data = await rolService.findAll();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const rol = await Rol.create(req.body);
-    res.status(201).json(apiResponse.created(rol));
+    const data = await rolService.findById(req.params.id);
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const rol = await Rol.findByPk(req.params.id);
-    if (!rol) throw new AppError('Rol no encontrado', 404);
-    await rol.update(req.body);
-    res.json(apiResponse.ok(rol, 'Actualizado'));
+    const data = await rolService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const rol = await Rol.findByPk(req.params.id);
-    if (!rol) throw new AppError('Rol no encontrado', 404);
-    await rol.destroy();
-    res.json(apiResponse.noContent('Rol eliminado'));
+    const data = await rolService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Rol actualizado correctamente'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await rolService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Rol eliminado correctamente'));
   } catch (e) { next(e); }
 };

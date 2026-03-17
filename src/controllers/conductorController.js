@@ -1,46 +1,41 @@
-const Conductor = require('../models/Conductor');
-const Persona = require('../models/Persona');
-const { apiResponse, AppError } = require('../middleware/response');
+import conductorService from '../services/ConductorService.js';
+import { apiResponse } from '../middleware/response.js';
 
-const include = [{ model: Persona, as: 'persona' }];
+/**
+ * Controlador de Conductores
+ */
 
-exports.listarTodos = async (req, res, next) => {
-  try { res.json(apiResponse.ok(await Conductor.findAll({ include }))); }
-  catch (e) { next(e); }
-};
-
-exports.buscarPorId = async (req, res, next) => {
+export const listarTodos = async (req, res, next) => {
   try {
-    const c = await Conductor.findByPk(req.params.id, { include });
-    if (!c) throw new AppError('Conductor no encontrado', 404);
-    res.json(apiResponse.ok(c));
+    const data = await conductorService.listarConDetalles();
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const { id_fk_persona, licencia } = req.body;
-    const persona = await Persona.findByPk(id_fk_persona);
-    if (!persona) throw new AppError('Persona no encontrada', 404);
-    const c = await Conductor.create({ id_fk_persona, licencia });
-    res.status(201).json(apiResponse.created(c));
+    const data = await conductorService.findById(req.params.id, { include: ['persona'] });
+    res.json(apiResponse.ok(data));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const c = await Conductor.findByPk(req.params.id);
-    if (!c) throw new AppError('Conductor no encontrado', 404);
-    await c.update({ licencia: req.body.licencia });
-    res.json(apiResponse.ok(c, 'Actualizado'));
+    const data = await conductorService.create(req.body);
+    res.status(201).json(apiResponse.created(data));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const c = await Conductor.findByPk(req.params.id);
-    if (!c) throw new AppError('Conductor no encontrado', 404);
-    await c.destroy();
-    res.json(apiResponse.noContent('Conductor eliminado'));
+    const data = await conductorService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(data, 'Conductor actualizado exitosamente'));
+  } catch (e) { next(e); }
+};
+
+export const eliminar = async (req, res, next) => {
+  try {
+    await conductorService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Conductor eliminado correctamente'));
   } catch (e) { next(e); }
 };

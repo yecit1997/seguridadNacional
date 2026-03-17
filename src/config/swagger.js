@@ -1,4 +1,4 @@
-const swaggerJsdoc = require('swagger-jsdoc');
+import swaggerJsdoc from 'swagger-jsdoc';
 
 const options = {
   definition: {
@@ -9,8 +9,18 @@ const options = {
       description: 'API REST para el sistema de gestión de seguridad nacional',
     },
     servers: [{ url: '/api' }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
   },
   apis: ['./src/routes/*.js'],
 };
 
-module.exports = swaggerJsdoc(options);
+export default swaggerJsdoc(options);

@@ -1,50 +1,48 @@
-const Persona = require('../models/Persona');
-const { apiResponse, AppError } = require('../middleware/response');
+import personaService from '../services/PersonaService.js';
+import { apiResponse } from '../middleware/response.js';
 
-exports.listarTodos = async (req, res, next) => {
+/**
+ * Controlador de Personas
+ */
+
+export const listarTodos = async (req, res, next) => {
   try {
-    const personas = await Persona.findAll();
+    const personas = await personaService.findAll();
     res.json(apiResponse.ok(personas));
   } catch (e) { next(e); }
 };
 
-exports.buscarPorId = async (req, res, next) => {
+export const buscarPorId = async (req, res, next) => {
   try {
-    const persona = await Persona.findByPk(req.params.id);
-    if (!persona) throw new AppError('Persona no encontrada', 404);
+    const persona = await personaService.findById(req.params.id);
     res.json(apiResponse.ok(persona));
   } catch (e) { next(e); }
 };
 
-exports.buscarPorDni = async (req, res, next) => {
+export const buscarPorDni = async (req, res, next) => {
   try {
-    const persona = await Persona.findOne({ where: { dni: req.params.dni } });
-    if (!persona) throw new AppError('Persona no encontrada', 404);
+    const persona = await personaService.findByDni(req.params.dni);
     res.json(apiResponse.ok(persona));
   } catch (e) { next(e); }
 };
 
-exports.crear = async (req, res, next) => {
+export const crear = async (req, res, next) => {
   try {
-    const persona = await Persona.create(req.body);
+    const persona = await personaService.create(req.body);
     res.status(201).json(apiResponse.created(persona));
   } catch (e) { next(e); }
 };
 
-exports.actualizar = async (req, res, next) => {
+export const actualizar = async (req, res, next) => {
   try {
-    const persona = await Persona.findByPk(req.params.id);
-    if (!persona) throw new AppError('Persona no encontrada', 404);
-    await persona.update(req.body);
-    res.json(apiResponse.ok(persona, 'Actualizado'));
+    const persona = await personaService.update(req.params.id, req.body);
+    res.json(apiResponse.ok(persona, 'Persona actualizada correctamente'));
   } catch (e) { next(e); }
 };
 
-exports.eliminar = async (req, res, next) => {
+export const eliminar = async (req, res, next) => {
   try {
-    const persona = await Persona.findByPk(req.params.id);
-    if (!persona) throw new AppError('Persona no encontrada', 404);
-    await persona.destroy();
-    res.json(apiResponse.noContent('Persona eliminada'));
+    await personaService.delete(req.params.id);
+    res.json(apiResponse.ok(null, 'Persona eliminada correctamente'));
   } catch (e) { next(e); }
 };
