@@ -79,11 +79,22 @@ class VehiculoService extends BaseService {
   }
 
   async listarConDetalles() {
-    return await this.findAll({ include: ['conductor'] });
+    return await this.findAll({ 
+      include: [{
+        association: 'conductor',
+        include: ['persona']
+      }] 
+    });
   }
 
   async findByPlaca(placa) {
-    return await this.model.findOne({ where: { placa }, include: ['conductor'] });
+    return await this.model.findOne({ 
+      where: { placa }, 
+      include: [{
+        association: 'conductor',
+        include: ['persona']
+      }] 
+    });
   }
 
   async create(data) {

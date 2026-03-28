@@ -9,6 +9,16 @@ class ConductorService extends BaseService {
   }
 
   /**
+   * Obtener conductores con sus datos de persona y vehículos asignados.
+   */
+  async listarConDetalles() {
+    return await this.findAll({
+      include: ['persona', 'vehiculos'],
+      order: [['id_fk_persona', 'ASC']]
+    });
+  }
+
+  /**
    * Sobrescribir creación para validar existencia de persona y licencia única (Paridad Spring).
    */
   async create(data) {
