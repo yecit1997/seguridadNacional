@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Usuario from './Usuario.js';
-import Reporte from './Reporte.js';
+import ReporteVehiculo from './Reporte.js';
 
 /**
  * Modelo Alerta
@@ -29,7 +29,7 @@ const Alerta = sequelize.define('Alerta', {
   reporte_id_reporte: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: { model: Reporte, key: 'id_reporte' },
+    references: { model: ReporteVehiculo, key: 'id_reporte_vehiculo' },
   },
   usuario_id_usuario_destinatario: {
     type: DataTypes.INTEGER,
@@ -43,7 +43,7 @@ const Alerta = sequelize.define('Alerta', {
 
 // Relaciones
 Alerta.belongsTo(Usuario, { foreignKey: 'usuario_id_usuario_destinatario', as: 'destinatario' });
-Alerta.belongsTo(Reporte, { foreignKey: 'reporte_id_reporte', as: 'reporte' });
+Alerta.belongsTo(ReporteVehiculo, { foreignKey: 'reporte_id_reporte', as: 'reporte' });
 
 Usuario.hasMany(Alerta, { foreignKey: 'usuario_id_usuario_destinatario', as: 'alertas' });
 

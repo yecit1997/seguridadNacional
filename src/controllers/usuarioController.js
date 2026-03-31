@@ -22,12 +22,46 @@ export const buscarPorId = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+export const actualizar = async (req, res, next) => {
+  try {
+    const { nombre_usuario, persona_id_persona, contrasena } = req.body;
+    const updateData = {};
+    
+    if (nombre_usuario) updateData.nombre_usuario = nombre_usuario;
+    if (persona_id_persona) updateData.persona_id_persona = persona_id_persona;
+    if (contrasena) updateData.contrasena = contrasena;
+    
+    const usuario = await usuarioService.update(req.params.id, updateData);
+    res.json(apiResponse.ok(usuario, 'Usuario actualizado correctamente'));
+  } catch (e) { next(e); }
+};
+
 export const crear = async (req, res, next) => {
   try {
-    const { usuario, persona, roles } = req.body;
-    // Se delega el registro complejo (transaccional) al servicio
-    const nuevoUsuario = await usuarioService.registrarUsuario(usuario, persona, roles);
-    res.status(201).json(apiResponse.created(nuevoUsuario));
+    const { nombre_usuario, contrasena, persona_id_persona, roles } = req.body;
+    
+    if (!nombre_usuario || !contrasena || !persona_id_persona) {
+      return res.status(400).json(apiResponse.error('Faltan datos requeridos: nombre_usuario, contrasena, persona_id_persona'));
+    }
+
+    const nuevoUsuario = await usuarioService.create({
+      nombre_usuario,
+      contrasena,
+      persona_id_persona,
+      status: true
+    });
+
+    if (roles && Array.isArray(roles) && roles.length > 0) {
+      for (const rolId of roles) {
+        await usuarioService.asignarRol(nuevoUsuario.id_usuario, rolId);
+      }
+    }
+
+    const usuarioConRoles = await usuarioService.findById(nuevoUsuario.id_usuario, {
+      include: ['persona', 'roles']
+    });
+
+    res.status(201).json(apiResponse.created(usuarioConRoles));
   } catch (e) { next(e); }
 };
 

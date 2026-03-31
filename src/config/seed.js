@@ -1,7 +1,8 @@
 import Rol from '../models/Rol.js';
 import Usuario from '../models/Usuario.js';
 import Persona from '../models/Persona.js';
-import { rolService } from '../services/CatalogosService.js';
+import { TipoReporte, StatusReporte } from '../models/Catalogos.js';
+import { rolService, tipoReporteService, statusReporteService } from '../services/CatalogosService.js';
 import usuarioService from '../services/UsuarioService.js';
 
 /**
@@ -21,7 +22,37 @@ export const seedData = async () => {
       if (created) console.log(`✅ Rol creado: ${nombreRol}`);
     }
 
-    // 2. Crear Usuario Administrador por defecto si no existe
+    // 2. Crear Tipos de Reporte si no existen
+    const tiposReporteRequeridos = [
+      { nombre: 'Entrada/Salida Personal', descripcion: 'Registro de entrada y salida de personal' },
+      { nombre: 'Entrada/Salida Vehículos', descripcion: 'Registro de entrada y salida de vehículos' },
+      { nombre: 'Incidentes/Accidentes', descripcion: 'Reportes de incidentes y accidentes' }
+    ];
+    for (const tipo of tiposReporteRequeridos) {
+      const [tipoReporte, created] = await TipoReporte.findOrCreate({
+        where: { nombre: tipo.nombre },
+        defaults: { descripcion: tipo.descripcion }
+      });
+      if (created) console.log(`✅ Tipo de reporte creado: ${tipo.nombre}`);
+    }
+
+    // 3. Crear Estados de Reporte si no existen
+    const statusRequeridos = [
+      { nombre: 'Pendiente', descripcion: 'Reporte creado, pendiente de revisión' },
+      { nombre: 'En revisión', descripcion: 'Reporte siendo revisado' },
+      { nombre: 'Aprobado', descripcion: 'Reporte aprobado' },
+      { nombre: 'Rechazado', descripcion: 'Reporte rechazado' },
+      { nombre: 'Completado', descripcion: 'Reporte completado' }
+    ];
+    for (const status of statusRequeridos) {
+      const [statusReporte, created] = await StatusReporte.findOrCreate({
+        where: { nombre: status.nombre },
+        defaults: { descripcion: status.descripcion }
+      });
+      if (created) console.log(`✅ Estado de reporte creado: ${status.nombre}`);
+    }
+
+    // 4. Crear Usuario Administrador por defecto si no existe
     const adminExists = await Usuario.findOne({ where: { nombre_usuario: 'admin' } });
     
     if (!adminExists) {
@@ -47,7 +78,7 @@ export const seedData = async () => {
       // Asignar rol ADMIN
       const rolAdmin = await Rol.findOne({ where: { nombre: 'ADMIN' } });
       if (rolAdmin) {
-        await nuevoAdmin.addRol(rolAdmin);
+        await nuevoAdmin.addRoles(rolAdmin);
       }
 
       console.log('=========================================');
@@ -63,7 +94,7 @@ export const seedData = async () => {
       if (rolesAdmin.length === 0) {
         console.log('⚠️ El admin no tiene roles, asignando ADMIN...');
         const rolAdmin = await Rol.findOne({ where: { nombre: 'ADMIN' } });
-        if (rolAdmin) await adminExists.addRol(rolAdmin);
+        if (rolAdmin) await adminExists.addRoles(rolAdmin);
       }
     }
 

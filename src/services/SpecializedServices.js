@@ -3,6 +3,8 @@ import Guarda from '../models/Guarda.js';
 import PersonalAdministrativo from '../models/PersonalAdministrativo.js';
 import Vehiculo from '../models/Vehiculo.js';
 import Usuario from '../models/Usuario.js';
+import Persona from '../models/Persona.js';
+import Conductor from '../models/Conductor.js';
 import { BaseService } from './BaseService.js';
 import { AppError } from '../middleware/response.js';
 
@@ -12,7 +14,13 @@ class SupervisorService extends BaseService {
   }
   
   async listarConDetalles() {
-    return await this.findAll({ include: ['usuario'] });
+    return await this.findAll({ 
+      include: [{
+        model: Usuario,
+        as: 'usuario',
+        include: [{ model: Persona, as: 'persona' }]
+      }]
+    });
   }
 
   async create(data) {
@@ -20,6 +28,22 @@ class SupervisorService extends BaseService {
     if (!usuario) {
       throw new AppError(`Usuario ${data.usuario_id_usuario} no encontrado`, 404);
     }
+    
+    const existeEnSupervisor = await this.model.findByPk(data.usuario_id_usuario);
+    if (existeEnSupervisor) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es supervisor`, 400);
+    }
+    
+    const existeEnGuarda = await Guarda.findByPk(data.usuario_id_usuario);
+    if (existeEnGuarda) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es un guarda`, 400);
+    }
+    
+    const existeEnPersonal = await PersonalAdministrativo.findByPk(data.usuario_id_usuario);
+    if (existeEnPersonal) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es personal administrativo`, 400);
+    }
+    
     return await super.create(data);
   }
 }
@@ -30,13 +54,34 @@ class GuardaService extends BaseService {
   }
 
   async listarConDetalles() {
-    return await this.findAll({ include: ['usuario', 'supervisor'] });
+    return await this.findAll({ 
+      include: [
+        {
+          model: Usuario,
+          as: 'usuario',
+          include: [{ model: Persona, as: 'persona' }]
+        },
+        {
+          model: Supervisor,
+          as: 'supervisor',
+          include: [{
+            model: Usuario,
+            as: 'usuario',
+            include: [{ model: Persona, as: 'persona' }]
+          }]
+        }
+      ]
+    });
   }
 
   async listarPorSupervisor(supervisorId) {
     return await this.findAll({
       where: { supervisor_id_supervisor: supervisorId },
-      include: ['usuario']
+      include: [{
+        model: Usuario,
+        as: 'usuario',
+        include: [{ model: Persona, as: 'persona' }]
+      }]
     });
   }
 
@@ -45,6 +90,22 @@ class GuardaService extends BaseService {
     if (!usuario) {
       throw new AppError(`Usuario ${data.usuario_id_usuario} no encontrado`, 404);
     }
+    
+    const existeEnGuarda = await this.model.findByPk(data.usuario_id_usuario);
+    if (existeEnGuarda) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es un guarda`, 400);
+    }
+    
+    const existeEnSupervisor = await Supervisor.findByPk(data.usuario_id_usuario);
+    if (existeEnSupervisor) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es supervisor`, 400);
+    }
+    
+    const existeEnPersonal = await PersonalAdministrativo.findByPk(data.usuario_id_usuario);
+    if (existeEnPersonal) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es personal administrativo`, 400);
+    }
+    
     if (data.supervisor_id_supervisor) {
       const sup = await Supervisor.findByPk(data.supervisor_id_supervisor);
       if (!sup) {
@@ -61,7 +122,13 @@ class PersonalService extends BaseService {
   }
 
   async listarConDetalles() {
-    return await this.findAll({ include: ['usuario'] });
+    return await this.findAll({ 
+      include: [{
+        model: Usuario,
+        as: 'usuario',
+        include: [{ model: Persona, as: 'persona' }]
+      }]
+    });
   }
 
   async create(data) {
@@ -69,6 +136,12 @@ class PersonalService extends BaseService {
     if (!usuario) {
       throw new AppError(`Usuario ${data.usuario_id_usuario} no encontrado`, 404);
     }
+    
+    const existe = await this.model.findByPk(data.usuario_id_usuario);
+    if (existe) {
+      throw new AppError(`El usuario ${data.usuario_id_usuario} ya es personal administrativo`, 400);
+    }
+    
     return await super.create(data);
   }
 }

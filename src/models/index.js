@@ -9,7 +9,8 @@ import PersonalAdministrativo from './PersonalAdministrativo.js';
 import Conductor from './Conductor.js';
 import Vehiculo from './Vehiculo.js';
 import { TipoReporte, StatusReporte } from './Catalogos.js';
-import Reporte from './Reporte.js';
+import ReporteVehiculo from './Reporte.js'; // Este archivo contiene el modelo de vehículos
+import ReportePersonal from './ReportePersonal.js';
 import Alerta from './Alerta.js';
 
 /**
@@ -30,6 +31,7 @@ export {
   Vehiculo,
   TipoReporte,
   StatusReporte,
-  Reporte,
+  ReporteVehiculo,
+  ReportePersonal,
   Alerta
 };

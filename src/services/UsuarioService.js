@@ -1,6 +1,7 @@
 import Usuario from '../models/Usuario.js';
 import Persona from '../models/Persona.js';
 import UsuarioRol from '../models/UsuarioRol.js';
+import Rol from '../models/Rol.js';
 import { BaseService } from './BaseService.js';
 import { AppError } from '../middleware/response.js';
 import sequelize from '../config/database.js';
@@ -11,12 +12,23 @@ class UsuarioService extends BaseService {
   }
 
   /**
-   * Obtener lista de usuarios incluyendo datos de persona.
+   * Obtener lista de usuarios incluyendo datos de persona y roles.
    */
   async listarConDetalles() {
     return await this.findAll({
-      include: [{ model: Persona, as: 'persona' }]
+      include: [
+        { model: Persona, as: 'persona' },
+        { model: Rol, as: 'roles', through: { attributes: [] } }
+      ]
     });
+  }
+
+  async create(data) {
+    const existe = await this.model.findOne({ where: { nombre_usuario: data.nombre_usuario } });
+    if (existe) {
+      throw new AppError(`El nombre de usuario '${data.nombre_usuario}' ya existe`, 400);
+    }
+    return await super.create(data);
   }
 
   /**
@@ -64,18 +76,20 @@ class UsuarioService extends BaseService {
   }
 
   /**
-   * Asignar un rol a un usuario.
+   * Asignar un rol a un usuario (reemplaza roles anteriores).
    */
   async asignarRol(idUsuario, idRol) {
-    const usuario = await this.findById(idUsuario);
-    const registro = await UsuarioRol.findOne({
-      where: { usuario_id_usuario: idUsuario, rol_id_rol: idRol }
-    });
-    if (registro) {
-      throw new AppError('El usuario ya tiene este rol asignado', 409);
+    const usuario = await this.model.findByPk(idUsuario);
+    if (!usuario) {
+      throw new AppError('Usuario no encontrado', 404);
     }
+    
+    await UsuarioRol.destroy({
+      where: { usuario_id_usuario: idUsuario }
+    });
+    
     return await UsuarioRol.create({
-      usuario_id_usuario: usuario.id_usuario,
+      usuario_id_usuario: idUsuario,
       rol_id_rol: idRol,
     });
   }

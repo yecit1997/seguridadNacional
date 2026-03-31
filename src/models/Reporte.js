@@ -3,13 +3,15 @@ import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 import Usuario from './Usuario.js';
 import { TipoReporte, StatusReporte } from './Catalogos.js';
+import Vehiculo from './Vehiculo.js';
+import Conductor from './Conductor.js';
 
 /**
- * Modelo Reporte
- * Almacena las incidencias o informes generados por los usuarios.
+ * Modelo ReporteVehiculo
+ * Registro de movimientos y novedades exclusivos de activos de transporte.
  */
-const Reporte = sequelize.define('Reporte', {
-  id_reporte: {
+const ReporteVehiculo = sequelize.define('ReporteVehiculo', {
+  id_reporte_vehiculo: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -17,6 +19,10 @@ const Reporte = sequelize.define('Reporte', {
   descripcion: {
     type: DataTypes.TEXT,
     allowNull: true,
+  },
+  entrada_salida: {
+    type: DataTypes.ENUM('Entrada', 'Salida'),
+    allowNull: false,
   },
   fecha_creacion: {
     type: DataTypes.DATE,
@@ -38,17 +44,30 @@ const Reporte = sequelize.define('Reporte', {
     allowNull: false,
     references: { model: Usuario, key: 'id_usuario' },
   },
+  vehiculo_id_vehiculo: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: Vehiculo, key: 'id_vehiculo' },
+  },
+  conductor_id_fk_persona: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: Conductor, key: 'id_fk_persona' },
+  },
 }, {
-  tableName: 'reporte',
+  tableName: 'reporte_vehiculo',
   timestamps: false,
 });
 
 // Relaciones
-Reporte.belongsTo(Usuario, { foreignKey: 'usuario_id_usuario_generador', as: 'generador' });
-Reporte.belongsTo(TipoReporte, { foreignKey: 'tipo_reporte_id_tipo_reporte', as: 'tipo' });
-Reporte.belongsTo(StatusReporte, { foreignKey: 'status_reporte_id_status_reporte', as: 'status' });
+ReporteVehiculo.belongsTo(Usuario, { foreignKey: 'usuario_id_usuario_generador', as: 'generador' });
+ReporteVehiculo.belongsTo(TipoReporte, { foreignKey: 'tipo_reporte_id_tipo_reporte', as: 'tipo' });
+ReporteVehiculo.belongsTo(StatusReporte, { foreignKey: 'status_reporte_id_status_reporte', as: 'status' });
+ReporteVehiculo.belongsTo(Vehiculo, { foreignKey: 'vehiculo_id_vehiculo', as: 'vehiculo' });
+ReporteVehiculo.belongsTo(Conductor, { foreignKey: 'conductor_id_fk_persona', as: 'conductor' });
 
-Usuario.hasMany(Reporte, { foreignKey: 'usuario_id_usuario_generador', as: 'reportes' });
+Usuario.hasMany(ReporteVehiculo, { foreignKey: 'usuario_id_usuario_generador', as: 'reportes_vehiculo' });
+Vehiculo.hasMany(ReporteVehiculo, { foreignKey: 'vehiculo_id_vehiculo', as: 'reportes' });
+Conductor.hasMany(ReporteVehiculo, { foreignKey: 'conductor_id_fk_persona', as: 'reportes' });
 
-export default Reporte;
-
+export default ReporteVehiculo;

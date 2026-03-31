@@ -1127,6 +1127,7 @@ router.post('/auth/registro', usuarioValidator, usuarioCtrl.crear);
 router.get   ('/usuarios',                    usuarioCtrl.listarTodos);
 router.get   ('/usuarios/:id',                usuarioCtrl.buscarPorId);
 router.post  ('/usuarios',                    usuarioValidator, usuarioCtrl.crear);
+router.put   ('/usuarios/:id',                usuarioCtrl.actualizar);
 router.patch ('/usuarios/:id/status',         usuarioCtrl.cambiarStatus);
 router.post  ('/usuarios/:id/roles/:idRol',   usuarioCtrl.asignarRol);
 router.delete('/usuarios/:id',                usuarioCtrl.eliminar);

@@ -28,10 +28,29 @@ export const personaValidator = [
  * Validaciones para Usuario
  */
 export const usuarioValidator = [
-  body('usuario.nombre_usuario').notEmpty().withMessage('El nombre de usuario es obligatorio'),
-  body('usuario.contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-  body('persona.dni').notEmpty().withMessage('El DNI de la persona es obligatorio'),
-  body('roles').optional().isArray().withMessage('Roles debe ser un arreglo'),
+  body().custom((value, { req }) => {
+    const data = req.body;
+    
+    // Formato anidado (original): usuario.nombre_usuario, persona.dni
+    // Formato plano (frontend): nombre_usuario, persona_id_persona
+    
+    const hasNestedFormat = data.usuario && data.usuario.nombre_usuario && data.persona && data.persona.dni;
+    const hasFlatFormat = data.nombre_usuario && data.contrasena && data.persona_id_persona;
+    
+    if (!hasNestedFormat && !hasFlatFormat) {
+      throw new Error('Datos de usuario inválidos. Use formato anidado (usuario, persona) o plano (nombre_usuario, contrasena, persona_id_persona)');
+    }
+    
+    if (hasFlatFormat && data.contrasena && data.contrasena.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+    
+    if (hasNestedFormat && data.usuario && data.usuario.contrasena && data.usuario.contrasena.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres');
+    }
+    
+    return true;
+  }),
   validate
 ];
 
@@ -39,8 +58,22 @@ export const usuarioValidator = [
  * Validaciones para Reporte
  */
 export const reporteValidator = [
-  body('descripcion').notEmpty().withMessage('La descripción es obligatoria'),
-  body('usuario_id_usuario_generador').notEmpty().withMessage('ID de generador obligatorio'),
-  body('tipo_reporte_id_tipo_reporte').notEmpty().withMessage('ID de tipo obligatorio'),
+  body('entrada_salida').notEmpty().withMessage('Debe especificar Entrada o Salida'),
+  body().custom((value) => {
+    const hasUser = value.usuario_id_usuario_generador || value.idUsuario;
+    const hasType = value.tipo_reporte_id_tipo_reporte || value.idTipo;
+    if (!hasUser || !hasType) {
+      throw new Error('Datos de usuario generador o tipo de reporte incompletos');
+    }
+    
+    // Validar que sea o para vehículo o para personal
+    const isVehiculo = value.placa || value.vehiculo_id_vehiculo || value.idVehiculo;
+    const isPersonal = value.persona_id_persona || value.idPersona;
+    
+    if (!isVehiculo && !isPersonal) {
+      throw new Error('El reporte debe estar asociado a un vehículo o a una persona');
+    }
+    return true;
+  }),
   validate
 ];
