@@ -13,17 +13,13 @@ import { errorHandler, notFound } from './src/middleware/errorMiddleware.js';
 import { authMiddleware } from './src/middleware/authMiddleware.js';
 import { seedData } from './src/config/seed.js';
 
-// Cargar variables de entorno
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-/**
- * Rate Limiting — Protección contra abusos y fuerza bruta.
- */
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
+  windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
@@ -33,9 +29,6 @@ const limiter = rateLimit({
   },
 });
 
-/**
- * Configuración de CORS
- */
 const corsOptions = {
   origin: (origin, callback) => {
     const allowed = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173').split(',');
@@ -50,9 +43,6 @@ const corsOptions = {
   credentials: true,
 };
 
-/**
- * Middlewares de Seguridad y Utilidad
- */
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(limiter);
@@ -60,17 +50,10 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/**
- * Configuración de Documentación Swagger
- */
 app.use('/api/swagger-ui', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api/v3/api-docs', (req, res) => res.json(swaggerSpec));
 
-/**
- * Definición de Rutas API
- */
 app.use('/api', (req, res, next) => {
-  // Eximir rutas públicas
   const publicPaths = ['/auth/login', '/swagger-ui', '/v3/api-docs'];
   if (publicPaths.some(path => req.path.startsWith(path))) {
     return next();
@@ -78,25 +61,17 @@ app.use('/api', (req, res, next) => {
   return authMiddleware(req, res, next);
 }, routes);
 
-/**
- * Manejo de Errores Global
- */
 app.use(notFound);
 app.use(errorHandler);
 
-/**
- * Inicialización del Servidor, Base de Datos y Datos Base
- */
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Conexión a Base de Datos (MySQL) establecida');
     
-    // Sincronizar modelos con la base de datos (Crea las tablas si no existen)
     await sequelize.sync({ alter: false }); 
     console.log('✅ Tablas sincronizadas correctamente');
 
-    // Sincronizar datos base (Seed)
     await seedData();
     
     app.listen(PORT, () => {
@@ -110,4 +85,8 @@ const startServer = async () => {
   }
 };
 
-startServer();
+export default app;
+
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
