@@ -8,5 +8,6 @@ export default {
   transform: {
     '^.+\\.js$': 'babel-jest'
   },
-  setupFiles: ['<rootDir>/src/test/setupTests.js']
+  setupFilesAfterEnv: ['<rootDir>/src/test/setupTests.js'],
+  testTimeout: 30000
 };

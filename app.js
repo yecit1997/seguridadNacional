@@ -18,6 +18,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Tiempo de espera para la conexión a la base de datos (10 segundos)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -25,7 +26,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    message: 'Demasiadas peticiones desde esta IP, intente nuevamente en 15 minutos.',
+    message: 'Demasiadas peticiones desde esta IP, intente nuevamente en 1 minutos.',
   },
 });
 

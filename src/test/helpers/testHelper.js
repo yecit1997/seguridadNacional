@@ -1,6 +1,7 @@
 import app from '../../../app.js';
 import supertest from 'supertest';
 import jwt from 'jsonwebtoken';
+import sequelize from '../../../src/config/database.js';
 
 export const request = supertest(app);
 
@@ -19,5 +20,7 @@ export const adminUser = {
 };
 
 export const generateToken = (payload = { id: 1, nombreUsuario: 'test', rol: 'admin' }) => {
-  return jwt.sign(payload, process.env.JWT_SECRET || 'dev_secret_key_2024', { expiresIn: '1h' });
+  return jwt.sign(payload, process.env.JWT_SECRET || 'test_secret_key_2024', { expiresIn: '1h' });
 };
+
+export { sequelize };
