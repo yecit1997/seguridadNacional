@@ -13,7 +13,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - backend_network
+      - mi_red_global
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -22,7 +22,7 @@ services:
 
   backend:
     build:
-      context: ./BACKEND
+      context: .
       dockerfile: Dockerfile
     container_name: seguridad_backend
     restart: unless-stopped
@@ -41,11 +41,11 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - backend_network
+      - mi_red_global
 
 volumes:
   mysql_data:
 
 networks:
-  backend_network:
-    driver: bridge
+  mi_red_global:
+    external: true
